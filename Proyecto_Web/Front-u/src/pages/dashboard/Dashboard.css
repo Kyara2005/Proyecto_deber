@@ -4,6 +4,7 @@
     padding: 20px 10px;
     text-align: center;
     min-height: 100vh;
+
 }
 .dashboard-header h2 {
     font-size: 2.5em;
@@ -13,7 +14,7 @@
 .dashboard-header p {
     font-size: 1.1em;
     color: #6a6a6a;
-    margin-bottom: 50px;
+    margin-bottom: 25px;
 }
 .dashboard-grid {
     display: grid;
@@ -105,16 +106,23 @@
 
 /* Estilo para la frase */
 .motivational-quote {
-    margin-top: 1rem;
+    margin-top: 20px;
     font-style: italic;
     color: #0c0101;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 10px 15px;
-    border-radius: 10px;
+    background: #E1BEE7;
     text-align: center;
-    animation: fadeIn 1.2s ease-in-out;
+}
+.quote-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 5px;
 }
 
+.quote-author {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 0;
+}
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }

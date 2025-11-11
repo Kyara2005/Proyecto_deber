@@ -28,7 +28,7 @@ const Dashboard = () => {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                if (response.data && response.data.nombre) {
+                if (response.data?.nombre) {
                     setUserName(response.data.nombre);
                 }
             } catch (error) {
@@ -41,12 +41,15 @@ const Dashboard = () => {
         //API pública de la frase
         const fetchQuote = async () => {
             try {
+                const response = await axios.get("https://api.allorigins.win/get?url=https://zenquotes.io/api/random");
+                const data = JSON.parse(response.data.contents);
+                const { q: frase, a: autor } = data[0];
+                //Traducción automática al español (usando MyMemory)
+                const traduccion = await axios.get(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(frase)}&langpair=en|es`);
+                const fraseTraducida = traduccion.data.responseData.translatedText;
 
-                const response = await axios.get("https://zenquotes.io/api/random");
-                const randomIndex = Math.floor(Math.random() * response.data.length);
-                const frase = response.data[randomIndex].text;
-                const autor = response.data[randomIndex].author || "Anónimo";
-                setQuote(`"${frase}" — ${autor}`);
+                // Mostrar la frase traducida
+                setQuote({ texto: `"${fraseTraducida}"`, autor });
             } catch (error) {
                 console.error("Error al obtener la frase motivadora:", error);
             }
@@ -92,7 +95,8 @@ const Dashboard = () => {
                 {/* Frase motivadora */}
                 {quote && (
                     <div className="motivational-quote" data-aos="fade-up">
-                        <p>{quote}</p>
+                        <p className="quote-text">{quote.texto}</p>
+                        <p className="quote-author">- {quote.autor}</p>
                     </div>
                 )}
             </div>
