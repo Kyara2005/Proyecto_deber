@@ -1,7 +1,7 @@
 import express from "express";
 import Usuario from "../models/Usuario.js";
 import jwt from "jsonwebtoken";
-import { sendMailToRegister } from "../config/nodemailer.js";
+import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js";
 import bcrypt from "bcryptjs";
 
 const router = express.Router();
@@ -14,7 +14,7 @@ const BLACKLISTED_DOMAINS = [
 const domainCheck = (req, res, next) => {
     const { correoInstitucional } = req.body;
     if (correoInstitucional) {
-        const dominio = correoInstitucional.split('@')[1];
+        const dominio = correoInstitucional.split("@")[1];
         if (BLACKLISTED_DOMAINS.includes(dominio)) {
             console.log(`❌ Correo rechazado por restricción: ${correoInstitucional}`);
             return res.status(400).json({
@@ -25,7 +25,9 @@ const domainCheck = (req, res, next) => {
     next();
 };
 
-// --- REGISTRO ---
+/* ---------------------------------------------------
+   🟣 REGISTRO
+---------------------------------------------------- */
 router.post("/register", domainCheck, async (req, res) => {
     try {
         const { nombre, correoInstitucional, password } = req.body;
@@ -40,9 +42,18 @@ router.post("/register", domainCheck, async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const nuevoUsuario = new Usuario({ nombre, correoInstitucional, password: hashedPassword });
+        const nuevoUsuario = new Usuario({
+            nombre,
+            correoInstitucional,
+            password: hashedPassword
+        });
 
-        const token = jwt.sign({ id: nuevoUsuario._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(
+            { id: nuevoUsuario._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
         nuevoUsuario.token = token;
         await nuevoUsuario.save();
 
@@ -57,25 +68,35 @@ router.post("/register", domainCheck, async (req, res) => {
     }
 });
 
-// --- CONFIRMAR CORREO ---
+/* ---------------------------------------------------
+   🟣 CONFIRMAR CUENTA
+---------------------------------------------------- */
 router.get("/confirmar/:token", async (req, res) => {
     try {
         const { token } = req.params;
+
         const usuario = await Usuario.findOne({ token });
-        if (!usuario) return res.status(404).json({ msg: "Token inválido o ya confirmado." });
+        if (!usuario) {
+    return res.redirect(`${process.env.URL_FRONTEND}/confirmar/error`);
+}
+
 
         usuario.token = null;
         usuario.confirmEmail = true;
         await usuario.save();
 
-        res.status(200).json({ msg: "Cuenta confirmada correctamente." });
+        // 🔹 CAMBIO: Redirigir al frontend en lugar de devolver JSON
+        res.redirect(`${process.env.URL_FRONTEND}/confirmar/exito`);
+
     } catch (error) {
         console.error("ERROR EN CONFIRMAR:", error);
         res.status(500).json({ msg: "Error del servidor", error: error.message });
     }
 });
 
-// --- LOGIN ---
+/* ---------------------------------------------------
+   🟣 LOGIN
+---------------------------------------------------- */
 router.post("/login", async (req, res) => {
     try {
         const { correoInstitucional, password } = req.body;
@@ -85,10 +106,12 @@ router.post("/login", async (req, res) => {
         }
 
         const usuario = await Usuario.findOne({ correoInstitucional });
-        if (!usuario) return res.status(400).json({ msg: "Usuario no encontrado" });
+        if (!usuario)
+            return res.status(400).json({ msg: "Usuario no encontrado" });
 
         const isMatch = await bcrypt.compare(password, usuario.password);
-        if (!isMatch) return res.status(400).json({ msg: "Contraseña incorrecta" });
+        if (!isMatch)
+            return res.status(400).json({ msg: "Contraseña incorrecta" });
 
         if (!usuario.confirmEmail) {
             return res.status(400).json({
@@ -96,7 +119,11 @@ router.post("/login", async (req, res) => {
             });
         }
 
-        const token = jwt.sign({ id: usuario._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(
+            { id: usuario._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
 
         res.json({
             token,
@@ -105,6 +132,79 @@ router.post("/login", async (req, res) => {
         });
     } catch (error) {
         console.error(error);
+        res.status(500).json({ msg: "Error del servidor" });
+    }
+});
+
+/* ---------------------------------------------------
+   🟣 FORGOT PASSWORD (ENVIAR CORREO)
+---------------------------------------------------- */
+router.post("/olvide-password", async (req, res) => {
+    try {
+        const { correoInstitucional } = req.body;
+
+        if (!correoInstitucional) {
+            return res.status(400).json({ msg: "El correo es obligatorio" });
+        }
+
+        const usuario = await Usuario.findOne({ correoInstitucional });
+        if (!usuario) {
+            return res.status(400).json({ msg: "El correo no está registrado" });
+        }
+
+        const resetToken = jwt.sign(
+            { id: usuario._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "15m" }
+        );
+
+        usuario.resetToken = resetToken;
+        usuario.resetTokenExpire = Date.now() + 15 * 60 * 1000;
+        await usuario.save();
+
+        await sendMailToRecoveryPassword(correoInstitucional, resetToken);
+
+        res.json({ msg: "Hemos enviado un enlace para restablecer tu contraseña." });
+
+    } catch (error) {
+        console.error("ERROR EN FORGOT PASSWORD:", error);
+        res.status(500).json({ msg: "Error del servidor" });
+    }
+});
+
+/* ---------------------------------------------------
+   🟣 RESET PASSWORD (GUARDAR NUEVA CONTRASEÑA)
+---------------------------------------------------- */
+router.post("/reset-password/:token", async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ msg: "La nueva contraseña es obligatoria" });
+        }
+
+        const usuario = await Usuario.findOne({
+            resetToken: token,
+            resetTokenExpire: { $gt: Date.now() }
+        });
+
+        if (!usuario) {
+            return res.status(400).json({ msg: "Token inválido o expirado." });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        usuario.password = hashedPassword;        // ← Aquí se actualiza la contraseña
+        usuario.resetToken = null;
+        usuario.resetTokenExpire = null;
+
+        await usuario.save();                      // ← Se guarda en la base de datos
+
+        res.json({ msg: "Contraseña restablecida correctamente." });
+
+    } catch (error) {
+        console.error("ERROR EN RESET PASSWORD:", error);
         res.status(500).json({ msg: "Error del servidor" });
     }
 });

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Register from "./pages/register/Register";
 import Login from "./pages/login/Login";
@@ -13,6 +13,8 @@ import Matches from "./pages/Matches/Matches";
 import { Confirm } from "./pages/confirm";
 import AOS from "aos";
 import 'aos/dist/aos.css';
+import ForgotPassword from "./pages/forgot-password/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   useEffect(() => {
@@ -33,8 +35,12 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="matches" element={<Matches />} />
 
-        {/* ✅ Ruta de confirmación de cuenta */}
+        {/* Confirmación de cuenta */}
         <Route path="confirmar/:token" element={<Confirm />} />
+
+        {/* Recuperación de contraseña */}
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="recuperarpassword/:token" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );

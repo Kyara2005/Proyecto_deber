@@ -1,162 +1,103 @@
-import logo from '../assets/logo-vibe-u.webp'
-import { Link, useParams } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { ToastContainer, toast, Slide } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import logo from '../assets/logo-vibe-u.webp';
+import { Link, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export const Confirm = () => {
-  const { token } = useParams()
-  const [mensaje, setMensaje] = useState('')
-  const [error, setError] = useState(false)
-  const [cargando, setCargando] = useState(true)
-
-  const toastMostrado = useRef(false)
+  const { token } = useParams();
+  const [mensaje, setMensaje] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const [fadeIn, setFadeIn] = useState(false);
 
   useEffect(() => {
     const confirmarCuenta = async () => {
       try {
-        const url = `${import.meta.env.VITE_BACKEND_URL}/confirmar/${token}`
-        const respuesta = await fetch(url)
-        const data = await respuesta.json()
-
-        if (!toastMostrado.current) {
-          setMensaje('Gracias')
-          setTimeout(() => {
-            toast.success('Gracias por confirmar tu cuenta ✅', {
-              position: 'top-right',
-              autoClose: 3000,
-              transition: Slide,
-              style: {
-                background: 'white',
-                color: 'black',
-                fontWeight: 'bold',
-              },
-              progressStyle: { background: 'green' },
-            })
-          }, 100)
-          toastMostrado.current = true
-        }
+        const res = await axios.get(`http://localhost:5000/api/usuarios/confirmar/${token}`);
+        setMensaje('Cuenta confirmada ✅');
       } catch (error) {
-        console.error('Error en confirmación:', error)
-        if (!toastMostrado.current) {
-          setMensaje('Gracias')
-          setTimeout(() => {
-            toast.info('Gracias por confirmar tu cuenta 😊', {
-              position: 'top-right',
-              autoClose: 3000,
-              transition: Slide,
-              style: {
-                background: 'white',
-                color: 'black',
-                fontWeight: 'bold',
-              },
-              progressStyle: { background: 'green' },
-            })
-          }, 100)
-          toastMostrado.current = true
-        }
+        setMensaje('Token inválido o ya confirmado');
       } finally {
-        setCargando(false)
+        setCargando(false);
+        setTimeout(() => setFadeIn(true), 50); // activar animación
       }
-    }
+    };
 
-    confirmarCuenta()
-  }, [token])
+    confirmarCuenta();
+  }, [token]);
+
+  const styles = {
+    container: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg,#ffb07c,#9f6bff)',
+      padding: '20px',
+      overflow: 'hidden',
+    },
+    card: {
+      background: 'white',
+      width: '400px',
+      padding: '50px 40px',
+      borderRadius: '20px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+      textAlign: 'center',
+      position: 'relative',
+      opacity: fadeIn ? 1 : 0,
+      transform: fadeIn ? 'scale(1)' : 'scale(0.8)',
+      transition: 'opacity 0.8s ease, transform 0.8s ease',
+    },
+    image: {
+      width: '130px',
+      height: '130px',
+      borderRadius: '50%',
+      marginBottom: '25px',
+      border: '4px solid #8a3dff',
+      objectFit: 'cover',
+    },
+    mensaje: {
+      fontSize: '28px', // más grande
+      fontWeight: 'bold',
+      marginBottom: '20px',
+      color: '#333',
+    },
+    subMensaje: {
+      fontSize: '18px',
+      color: '#555',
+      marginBottom: '25px',
+    },
+    button: {
+      width: '100%',
+      padding: '15px',
+      background: '#8a3dff',
+      color: 'white',
+      fontSize: '18px',
+      fontWeight: 'bold',
+      border: 'none',
+      borderRadius: '12px',
+      cursor: 'pointer',
+      transition: '.3s',
+    },
+  };
 
   if (cargando) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ fontSize: '36px', fontWeight: 'bold', color: 'gray' }}>
-          Verificando tu cuenta...
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', textAlign: 'center' }}>
+        <p style={{ fontSize: '28px', fontWeight: 'bold', color: 'white' }}>Verificando tu cuenta...</p>
       </div>
-    )
+    );
   }
 
   return (
-    <div
-      className="relative flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center overflow-hidden"
-    >
-      <ToastContainer position="top-right" transition={Slide} />
-
-      {/* Imagen */}
-      <img
-        src={logo}
-        alt="Confirmación"
-        className="rounded-full border-4 border-gray-500 shadow-md object-cover overflow-hidden absolute"
-        style={{
-          width: '300px',
-          height: '300px',
-          top: '100%',
-          left: '100%',
-          transform: 'translate(185%, 25%)',
-          borderRadius: '300px',
-          border: '4px solid black',
-          zIndex: 20,
-        }}
-      />
-
-      {/* Texto y botón movibles manualmente */}
-      <div
-        style={{
-          position: 'absolute',
-          zIndex: 30,
-          marginTop: '100px', // 🔹 Ajusta este valor para mover el bloque verticalmente
-          marginLeft: '590px', // 🔹 Ajusta este valor para mover el bloque horizontalmente
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '5px',
-        }}
-      >
-        <p
-          style={{
-            fontSize: '42px',
-            fontWeight: 'bold',
-            color: 'black',
-          }}
-        >
-          {mensaje}
-        </p>
-
-        <p style={{ fontSize: '26px', color: 'black' }}>
-          Ya puedes iniciar sesión
-        </p>
-
-        <Link
-          to="/login"
-          style={{
-            background: 'linear-gradient(90deg, #8c01f7ff, #ad3bffff)',
-            color: 'black',
-            fontWeight: 'bold',
-            fontSize: '25px',
-            marginTop: '10px', // 🔹 Ajusta para mover el botón más abajo o arriba
-            marginLeft: '25px', // 🔹 Ajusta para mover el botón horizontalmente respecto al bloque
-            padding: '12px 0',
-            width: '200px',
-            textAlign: 'center',
-            borderRadius: '20px',
-            transition: 'all 0.3s',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.05)'
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1)'
-          }}
-        >
-          Ir al Login
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <img src={logo} alt="Logo Vibe-U" style={styles.image} />
+        <p style={styles.mensaje}>{mensaje}</p>
+        <p style={styles.subMensaje}>Ya puedes iniciar sesión</p>
+        <Link to="/login">
+          <button style={styles.button}>Ir al Login</button>
         </Link>
       </div>
     </div>
-  )
-}
+  );
+};

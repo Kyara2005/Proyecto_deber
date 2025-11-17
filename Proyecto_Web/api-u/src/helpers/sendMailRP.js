@@ -11,9 +11,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const sendMail = async (to, subject, html) => {
+const sendMailRP = async (to, subject, html) => {
     try {
-        const info = await transporter.sendMail({
+        const info = await transporter.sendMailRP({
             from: '"Vibe-U 🎓" <noreply@vibeu.com>',
             to,
             subject,
@@ -26,29 +26,7 @@ const sendMail = async (to, subject, html) => {
 };
 
 // ------------------------------------------------------
-// 🟣 CONFIRMAR CORREO (SIN MODIFICAR TU ESTILO)
-// ------------------------------------------------------
-export const sendMailToRegister = async (userMail, token) => {
-    const urlConfirm = `${process.env.URL_BACKEND}/api/usuarios/confirmar/${token}`;
-
-    const html = `
-        <h1>Bienvenido a Vibe-U 🎓</h1>
-        <p>Gracias por registrarte. Confirma tu correo haciendo clic en el siguiente enlace:</p>
-
-        <a href="${urlConfirm}" style="background:#7c3aed;color:white;
-           padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:bold;">
-           Confirmar correo
-        </a>
-
-        <br/><br/>
-        <p>Si tú no creaste esta cuenta, puedes ignorar este mensaje.</p>
-    `;
-
-    await sendMail(userMail, "Confirma tu cuenta en VIBE-U 💜", html);
-};
-
-// ------------------------------------------------------
-// 🟣 RECUPERAR CONTRASEÑA (AUMENTADO, NO MODIFICADO)
+// 🟣 RECUPERAR CONTRASEÑA
 // ------------------------------------------------------
 export const sendMailToRecoveryPassword = async (userMail, token) => {
     const urlRecovery = `${process.env.URL_FRONTEND}/recuperarpassword/${token}`;
@@ -68,7 +46,8 @@ export const sendMailToRecoveryPassword = async (userMail, token) => {
         <p>Si tú no solicitaste este cambio, simplemente ignora este mensaje.</p>
     `;
 
-    await sendMail(userMail, "Restablece tu contraseña 🔒", html);
+    await sendMailRP(userMail, "Restablece tu contraseña 🔒", html);
 };
 
-export default sendMail;
+// Exportar la función genérica si quieres reutilizarla
+export default sendMailRP;

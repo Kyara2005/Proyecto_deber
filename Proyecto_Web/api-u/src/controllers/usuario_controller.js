@@ -1,22 +1,26 @@
 import Usuario from "../models/Usuario.js";
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js";
 
-// --- Registro ---
+
+// =========================================================
+// 🔵 REGISTRO
+// =========================================================
 const registro = async (req, res) => {
     try {
-        console.log("📩 Body recibido:", req.body);
-
         const { correoInstitucional, password } = req.body;
+
         if (Object.values(req.body).includes("")) {
             return res.status(400).json({ msg: "Debes llenar todos los campos." });
         }
 
-        const verificarEmailBDD = await Usuario.findOne({ correoInstitucional });
-        if (verificarEmailBDD)
+        const existe = await Usuario.findOne({ correoInstitucional });
+        if (existe) {
             return res.status(400).json({ msg: "El correo institucional ya está registrado." });
+        }
 
         const nuevoUsuario = new Usuario(req.body);
         nuevoUsuario.password = await nuevoUsuario.encryptPassword(password);
+
         const token = nuevoUsuario.createToken();
         nuevoUsuario.token = token;
 
@@ -30,14 +34,16 @@ const registro = async (req, res) => {
     }
 };
 
-// --- Confirmar correo ---
+
+// =========================================================
+// 🔵 CONFIRMAR CORREO
+// =========================================================
 const confirmarMail = async (req, res) => {
     try {
         const { token } = req.params;
         const usuarioBDD = await Usuario.findOne({ token });
 
         if (!usuarioBDD) {
-            // 🔴 Token inválido: redirige a interfaz de error
             return res.redirect(`${process.env.URL_FRONTEND}/confirmar/error`);
         }
 
@@ -45,58 +51,67 @@ const confirmarMail = async (req, res) => {
         usuarioBDD.confirmEmail = true;
         await usuarioBDD.save();
 
-        // 🟢 Redirige a interfaz de éxito
         return res.redirect(`${process.env.URL_FRONTEND}/confirmar/exito`);
+
     } catch (error) {
-        console.error(error);
-        // 🔴 Si algo falla, redirige también a error
         return res.redirect(`${process.env.URL_FRONTEND}/confirmar/error`);
     }
 };
 
-// --- Recuperar contraseña ---
+
+// =========================================================
+// 🔵 RECUPERAR CONTRASEÑA (ENVIAR TOKEN)
+// =========================================================
 const recuperarPassword = async (req, res) => {
     try {
         const { correoInstitucional } = req.body;
-        if (!correoInstitucional)
+
+        if (!correoInstitucional) {
             return res.status(400).json({ msg: "Debes ingresar un correo electrónico" });
+        }
 
         const usuarioBDD = await Usuario.findOne({ correoInstitucional });
-        if (!usuarioBDD)
+        if (!usuarioBDD) {
             return res.status(404).json({ msg: "El usuario no se encuentra registrado" });
+        }
 
         const token = usuarioBDD.createToken();
         usuarioBDD.token = token;
+
         await sendMailToRecoveryPassword(correoInstitucional, token);
         await usuarioBDD.save();
 
         res.status(200).json({ msg: "Revisa tu correo electrónico para restablecer tu contraseña" });
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ msg: `❌ Error en el servidor - ${error.message}` });
     }
 };
 
-// --- Comprobar token de recuperación ---
+
+// =========================================================
+// 🔵 COMPROBAR TOKEN PARA RECUPERACIÓN
+// =========================================================
 const comprobarTokenPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const usuarioBDD = await Usuario.findOne({ token });
 
-        if (!usuarioBDD || usuarioBDD.token !== token) {
-            return res.status(404).json({ msg: "Lo sentimos, no se puede validar la cuenta" });
+        if (!usuarioBDD) {
+            return res.status(404).json({ msg: "Token inválido" });
         }
 
         res.status(200).json({ msg: "Token confirmado, ya puedes crear tu nuevo password" });
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ msg: `❌ Error en el servidor - ${error.message}` });
     }
 };
 
-// --- Crear nuevo password ---
+
+// =========================================================
+// 🔵 CREAR NUEVO PASSWORD
+// =========================================================
 const crearNuevoPassword = async (req, res) => {
     try {
         const { password, confirmpassword } = req.body;
@@ -105,62 +120,72 @@ const crearNuevoPassword = async (req, res) => {
         if (Object.values(req.body).includes("")) {
             return res.status(400).json({ msg: "Debes llenar todos los campos" });
         }
+
         if (password !== confirmpassword) {
             return res.status(400).json({ msg: "Los passwords no coinciden" });
         }
 
         const usuarioBDD = await Usuario.findOne({ token });
-        if (!usuarioBDD)
-            return res.status(404).json({ msg: "No se puede validar la cuenta" });
+        if (!usuarioBDD) {
+            return res.status(404).json({ msg: "Token inválido" });
+        }
 
         usuarioBDD.password = await usuarioBDD.encryptPassword(password);
         usuarioBDD.token = null;
+
         await usuarioBDD.save();
 
-        res.status(200).json({ msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" });
+        res.status(200).json({ msg: "Tu contraseña ha sido actualizada correctamente" });
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ msg: `❌ Error en el servidor - ${error.message}` });
     }
 };
 
-// --- LOGIN USUARIO ---
+
+// =========================================================
+// 🔵 LOGIN
+// =========================================================
 const loginUsuario = async (req, res) => {
     try {
         const { correoInstitucional, password } = req.body;
 
         const usuarioBDD = await Usuario.findOne({ correoInstitucional });
-        if (!usuarioBDD)
+        if (!usuarioBDD) {
             return res.status(404).json({ msg: "Usuario no registrado" });
+        }
 
-        const match = await usuarioBDD.matchPassword(password);
-        if (!match)
-            return res.status(400).json({ msg: "Contraseña incorrecta" });
-
-        if (!usuarioBDD.confirmEmail)
+        if (!usuarioBDD.confirmEmail) {
             return res.status(400).json({ msg: "Debes confirmar tu correo primero" });
+        }
+
+        const passwordOK = await usuarioBDD.matchPassword(password);
+        if (!passwordOK) {
+            return res.status(400).json({ msg: "Contraseña incorrecta" });
+        }
 
         res.status(200).json({
             msg: "Inicio de sesión exitoso",
-            token: usuarioBDD.createToken(),
+            token: usuarioBDD.createJWT(),  // ← TOKEN REAL DE LOGIN
             nombre: usuarioBDD.nombre,
             apellido: usuarioBDD.apellido,
             rol: usuarioBDD.rol
         });
 
     } catch (error) {
-        console.error(error);
         res.status(500).json({ msg: `Error en el servidor: ${error.message}` });
     }
 };
 
-// --- EXPORT ---
+
+// =========================================================
+// EXPORTAR
+// =========================================================
 export {
     registro,
     confirmarMail,
     recuperarPassword,
     comprobarTokenPassword,
     crearNuevoPassword,
-    loginUsuario
+    loginUsuario,
 };

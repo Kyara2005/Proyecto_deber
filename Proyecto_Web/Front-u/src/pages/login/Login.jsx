@@ -17,12 +17,12 @@ const Login = () => {
 
         try {
             const res = await axios.post(
-    `${import.meta.env.VITE_BACKEND_URL}/login`,
-    {
-        correoInstitucional: data.email,
-        password: data.password
-    }
-);
+                `${import.meta.env.VITE_BACKEND_URL}/login`,
+                {
+                    correoInstitucional: data.email,
+                    password: data.password
+                }
+            );
 
             const { token, nombre, correoInstitucional } = res.data;
             localStorage.setItem("token", token);
@@ -51,7 +51,9 @@ const Login = () => {
 
                 <div className="login-card">
                     <h2 className="login-title">Inicio de Sesión</h2>
-                    <p className="login-subtitle">Ingresa tus datos para acceder a tu cuenta.</p>
+                    <p className="login-subtitle">
+                        Ingresa tus datos para acceder a tu cuenta.
+                    </p>
 
                     <form className="login-form" onSubmit={handleSubmit(handleLogin)}>
                         <div className="input-group">
@@ -73,6 +75,11 @@ const Login = () => {
                         </div>
 
                         <button type="submit" className="login-btn">Iniciar Sesión</button>
+
+                        {/* 🔹 NUEVO: Enlace para recuperar contraseña */}
+                        <Link to="/Forgot-password" className="Forgot-link">
+                            ¿Olvidaste tu contraseña?
+                        </Link>
                     </form>
 
                     <Link to="/register" className="register-link">
