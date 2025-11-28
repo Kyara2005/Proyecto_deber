@@ -10,7 +10,7 @@ const MUsuario = () => {
   const [userName, setUserName] = useState("Usuario");
   const [userStatus, setUserStatus] = useState("Disponible");
   const [avatar, setAvatar] = useState(null);
-  const [activeTab, setActiveTab] = useState("favoritos");
+  const [activeTab, setActiveTab] = useState("cuenta");
   const [menuOpen, setMenuOpen] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -26,11 +26,16 @@ const MUsuario = () => {
   const [userPhone, setUserPhone] = useState("");
   const [userAddress, setUserAddress] = useState("");
   const [userCedula, setUserCedula] = useState("");
-  const [userGmail, setUserGmail] = useState("");
-  const [userInstitutionalEmail, setUserInstitutionalEmail] = useState("");
   const [userDescription, setUserDescription] = useState("");
   const [userUniversity, setUserUniversity] = useState("");
   const [userCareer, setUserCareer] = useState("");
+
+  // 🆕 Función para añadir anti-caché a la URL del avatar
+  const getAvatarUrl = (url) => {
+    if (!url) return null;
+    // Añade un timestamp como parámetro para forzar la recarga del navegador
+    return `${url}?t=${new Date().getTime()}`;
+  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -38,8 +43,9 @@ const MUsuario = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
+        // Se mantiene la ruta /perfil para la carga inicial
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/perfil`,
+          `${import.meta.env.VITE_BACKEND_URL}/perfil`, 
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -49,8 +55,6 @@ const MUsuario = () => {
         if (response.data?.telefono) setUserPhone(response.data.telefono);
         if (response.data?.direccion) setUserAddress(response.data.direccion);
         if (response.data?.cedula) setUserCedula(response.data.cedula);
-        if (response.data?.gmail) setUserGmail(response.data.gmail);
-        if (response.data?.correo_institucional) setUserInstitutionalEmail(response.data.correo_institucional);
         if (response.data?.descripcion) setUserDescription(response.data.descripcion);
         if (response.data?.universidad) setUserUniversity(response.data.universidad);
         if (response.data?.carrera) setUserCareer(response.data.carrera);
@@ -64,21 +68,60 @@ const MUsuario = () => {
   }, []);
 
   const handleFileClick = () => {
+    // Nota: Aquí solo se dispara el input. El manejo de la imagen para subirla y persistirla
+    // se hace idealmente en el componente "ActualizarInfo" (con el cropper).
     fileInputRef.current.click();
   };
 
-  const handleFileChange = (e) => {
+  // Función de subida directa (solo para prueba, ya que el cropper se usa en ActualizarInfo)
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setAvatar(reader.result);
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Lógica de subida y guardado de persistencia (si se usa directamente aquí)
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "VIBE-U");
+    formData.append("folder", "avatars");
+
+    let newAvatarUrl = null;
+    const token = localStorage.getItem('token');
+    if (!token) {
+        toast.error("Sesión expirada. Por favor, inicia sesión.");
+        return;
+    }
+
+    try {
+      const resCloudinary = await axios.post(
+        "https://api.cloudinary.com/v1_1/dm5yhmz9a/image/upload",
+        formData
+      );
+      newAvatarUrl = resCloudinary.data.secure_url;
+      
+      setAvatar(newAvatarUrl);
+      
+      await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}/actualizar`, 
+        { avatar: newAvatarUrl },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success("Avatar actualizado y guardado correctamente.");
+      
+    } catch (err) {
+      console.error("Error al subir o guardar el avatar:", err.response?.data || err);
+      toast.error("Error al actualizar el avatar.");
     }
   };
+  // ----------------------------------------------------------------------
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
+  };
+
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
   };
 
   useEffect(() => {
@@ -110,141 +153,53 @@ const MUsuario = () => {
     switch (activeTab) {
       case "cuenta":
         return (
-          <div className="profile-container">
-            <h3>Mi Cuenta</h3>
+          <div className="user-profile-section">
+            {/* Nombre arriba del avatar en color negro */}
+            <h3 style={{ textAlign: "center", marginBottom: "15px", color: "#000" }}>
+              {userName || "Usuario"}
+            </h3>
 
-            <div className="profile-avatar-container" style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
-              <div
-                className="avatar-circle"
-                style={{
-                  width: "150px",
-                  height: "150px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  backgroundColor: "#ddd",
-                  flexShrink: 0
-                }}
-              >
+            <div className="profile-header" style={{ justifyContent: "center" }}>
+              <div className="avatar-circle-large">
                 {avatar ? (
-                  <img
-                    src={avatar}
-                    alt="Avatar"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
+                  // 🛑 APLICAR getAvatarUrl AQUÍ
+                  <img src={getAvatarUrl(avatar)} alt="Avatar" className="avatar-img-large" />
                 ) : (
-                  <span className="default-avatar" style={{ fontSize: "80px", display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>👤</span>
+                  <span className="default-avatar-large">👤</span>
                 )}
               </div>
+            </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-                <div>
-                  <button
-                    onClick={handleFileClick}
-                    style={{ padding: "8px 12px", borderRadius: "5px", cursor: "pointer", marginRight: "10px" }}
-                  >
-                    Subir foto
-                  </button>
-                  <button
-                    onClick={() => setAvatarModalOpen(!avatarModalOpen)}
-                    style={{ padding: "8px 12px", borderRadius: "5px", cursor: "pointer" }}
-                  >
-                    Elegir avatar
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="input-file-hidden"
-                    accept="image/*"
-                  />
-                </div>
+            <div className="profile-info">
+              <div className="info-row">
+                <strong>Descripción:</strong>
+                <span style={{ color: userDescription ? "#333" : "#000" }}>{userDescription || "No disponible"}</span>
+              </div>
+              <div className="info-row">
+                <strong>Teléfono:</strong>
+                <span style={{ color: userPhone ? "#333" : "#000" }}>{userPhone || "No disponible"}</span>
+              </div>
+              <div className="info-row">
+                <strong>Dirección:</strong>
+                <span style={{ color: userAddress ? "#333" : "#000" }}>{userAddress || "No disponible"}</span>
+              </div>
+              <div className="info-row">
+                <strong>Cédula:</strong>
+                <span style={{ color: userCedula ? "#333" : "#000" }}>{userCedula || "No disponible"}</span>
+              </div>
 
-                {avatarModalOpen && (
-                  <div
-                    className="avatar-modal"
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "flex-start",
-                      gap: "10px",
-                      marginBottom: "15px",
-                      padding: "10px",
-                      background: "#fff",
-                      borderRadius: "10px",
-                      boxShadow: "0 5px 10px rgba(0,0,0,0.2)",
-                    }}
-                  >
-                    {avatarOptions.map((url, i) => (
-                      <img
-                        key={i}
-                        src={url}
-                        alt={`Avatar ${i}`}
-                        className="avatar-option"
-                        onClick={() => {
-                          setAvatar(url);
-                          setAvatarModalOpen(false);
-                        }}
-                        style={{
-                          width: "60px",
-                          height: "60px",
-                          borderRadius: "50%",
-                          cursor: "pointer",
-                          border: "2px solid transparent",
-                        }}
-                        onMouseOver={(e) => (e.currentTarget.style.borderColor = "#007bff")}
-                        onMouseOut={(e) => (e.currentTarget.style.borderColor = "transparent")}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div>
-                    <label style={{ color: "#000" }}>Usuario</label>
-                    <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Descripción</label>
-                    <textarea value={userDescription} onChange={(e) => setUserDescription(e.target.value)} rows={3} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Teléfono</label>
-                    <input type="text" value={userPhone} onChange={(e) => setUserPhone(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Dirección</label>
-                    <input type="text" value={userAddress} onChange={(e) => setUserAddress(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Cédula</label>
-                    <input type="text" value={userCedula} onChange={(e) => setUserCedula(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Gmail</label>
-                    <input type="email" value={userGmail} onChange={(e) => setUserGmail(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Correo institucional</label>
-                    <input type="email" value={userInstitutionalEmail} onChange={(e) => setUserInstitutionalEmail(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Universidad</label>
-                    <input type="text" value={userUniversity} onChange={(e) => setUserUniversity(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-                  <div>
-                    <label style={{ color: "#000" }}>Carrera</label>
-                    <input type="text" value={userCareer} onChange={(e) => setUserCareer(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "5px", backgroundColor: "#fff", color: "#000" }} />
-                  </div>
-
-                  <div style={{ textAlign: "center", marginTop: "15px" }}>
-                    <button className="profile-options-btn" onClick={() => toast.info("Función de guardar info aún no implementada")} style={{ padding: "10px 20px", background: "#007bff", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>Guardar cambios</button>
-                  </div>
-                </div>
+              <div className="info-row">
+                <strong>Universidad:</strong>
+                <span style={{ color: userUniversity ? "#333" : "#000" }}>{userUniversity || "No disponible"}</span>
+              </div>
+              <div className="info-row">
+                <strong>Carrera:</strong>
+                <span style={{ color: userCareer ? "#333" : "#000" }}>{userCareer || "No disponible"}</span>
               </div>
             </div>
           </div>
         );
+
       case "favoritos":
         return <div><h3>Favoritos</h3><p>Información de tu cuenta...</p></div>;
       case "chats":
@@ -260,57 +215,58 @@ const MUsuario = () => {
     <div className="musuario-container">
       <ToastContainer />
 
-      <button className={`hamburger-btn ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(!menuOpen)} style={{ position: "fixed", top: "10px", left: "10px", zIndex: 2000 }}>
+      {/* BOTÓN DE HAMBURGUESA */}
+      <button className={`hamburger-btn ${menuOpen ? "open" : ""}`} onClick={handleMenuToggle}>
         <span></span>
         <span></span>
         <span></span>
       </button>
 
-    
-            {/* MENÚ DESLIZABLE */}
-            <nav className={`side-menu ${menuOpen ? "show" : ""}`}>
+      {/* MENÚ DESLIZABLE */}
+      <nav className={`side-menu ${menuOpen ? "show" : ""}`}>
 
-  {/* SECCIÓN SUPERIOR: Menú + Avatar */}
-  <div className="menu-header">
-    <h3 className="menu-title">Menú</h3>
+        {/* SECCIÓN SUPERIOR: Menú + Avatar */}
+        <div className="menu-header">
+          <h3 className="menu-title">Menú</h3>
 
-    <div className="avatar-section">
-      <div className="avatar-container" onClick={handleFileClick}>
-        {avatar ? (
-          <img src={avatar} alt="Avatar" className="avatar-img" />
-        ) : (
-          <span className="default-avatar">👤</span>
-        )}
-        <div className="avatar-overlay">
-          <i className="fa fa-camera"></i>
+          <div className="avatar-section">
+            <div className="avatar-container" onClick={handleFileClick}>
+              {avatar ? (
+                // 🛑 APLICAR getAvatarUrl AQUÍ
+                <img src={getAvatarUrl(avatar)} alt="Avatar" className="avatar-img" />
+              ) : (
+                <span className="default-avatar">👤</span>
+              )}
+              <div className="avatar-overlay">
+                <i className="fa fa-camera"></i>
+              </div>
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="input-file-hidden"
+              accept="image/*"
+            />
+          </div>
         </div>
-      </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="input-file-hidden"
-        accept="image/*"
-      />
-    </div>
-  </div>
-
-  {/* BOTONES ALINEADOS A LA IZQUIERDA */}
-  <div className="menu-buttons">
-    <button onClick={() => navigate("/Dashboard")}>Inicio</button>
-    <button onClick={() => navigate("/MUsuario")}>Mi cuenta</button>
-    <button onClick={() => {}}>Favoritos</button>
-    <button onClick={() => {}}>Ajustes</button>
-    <button onClick={handleLogout}>Cerrar sesión</button>
-  </div>
-</nav>
+        {/* BOTONES ALINEADOS A LA IZQUIERDA */}
+        <div className="menu-buttons">
+          <button onClick={() => navigate("/Dashboard")}>Inicio</button>
+          <button onClick={() => navigate("/MUsuario")}>Mi cuenta</button>
+          <button onClick={() => {}}>Favoritos</button>
+          <button onClick={() => navigate("/Ajustes")}>Ajustes</button>
+          <button onClick={handleLogout}>Cerrar sesión</button>
+        </div>
+      </nav>
 
       {/* =============================== */}
-      {/*  BARRA IZQUIERDA CON AVATAR     */}
+      {/* BARRA DE NAVEGACIÓN PRINCIPAL */}
       {/* =============================== */}
 
-      <div className="left-panel">
+      <div className="main-nav-panel"> 
         <div className="left-panel-content">
 
           {/* Avatar y texto */}
@@ -326,16 +282,18 @@ const MUsuario = () => {
               }}
             >
               {avatar ? (
-                <img src={avatar} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                // 🛑 APLICAR getAvatarUrl AQUÍ
+                <img src={getAvatarUrl(avatar)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Avatar" />
               ) : (
                 <span style={{ fontSize: "50px", display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>👤</span>
               )}
             </div>
 
-            <h3 style={{ color: "#000", marginTop: "10px" }}>{userName}</h3>
-            <p style={{ color: "green", marginTop: "-5px" }}>{userStatus}</p>
+            {/* Aquí Damaris y su estado */}
+            <h3 style={{ color: "white", marginTop: "10px" }}>{userName}</h3>
+            <p style={{ color: "#8bc34a", marginTop: "-5px" }}>{userStatus}</p>
 
-            <hr style={{ marginTop: "10px", marginBottom: "10px" }} />
+            <hr style={{ marginTop: "10px", marginBottom: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.2)" }} />
           </div>
 
           {/* Botones */}

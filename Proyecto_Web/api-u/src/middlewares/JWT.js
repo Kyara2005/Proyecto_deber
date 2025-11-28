@@ -5,8 +5,9 @@ import Usuario from "../models/Usuario.js";
 const verificarTokenJWT = async (req, res, next) => {
     const { authorization } = req.headers;
 
-    if (!authorization)
+    if (!authorization) {
         return res.status(401).json({ msg: "Acceso denegado: token no proporcionado" });
+    }
 
     try {
         const token = authorization.split(" ")[1];
@@ -17,14 +18,15 @@ const verificarTokenJWT = async (req, res, next) => {
             .lean()
             .select("-password -token -resetToken -resetTokenExpire");
 
-        if (!usuarioBDD)
+        if (!usuarioBDD) {
             return res.status(401).json({ msg: "Usuario no encontrado" });
+        }
 
-        req.usuario = usuarioBDD; // guardamos data del usuario
+        req.usuario = usuarioBDD;
         next();
 
     } catch (error) {
-        return res.status(401).json({ msg: `Token inválido o expirado` });
+        return res.status(401).json({ msg: "Token inválido o expirado" });
     }
 };
 

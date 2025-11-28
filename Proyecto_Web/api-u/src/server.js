@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import usuarioRouter from "./routers/usuario_routes.js";
+import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config();
 
@@ -11,7 +12,14 @@ const app = express();
 
 // ✅ Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // aumento límite por si suben imágenes grandes
+
+// ✅ Configuración de Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
 
 // ✅ Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI, {

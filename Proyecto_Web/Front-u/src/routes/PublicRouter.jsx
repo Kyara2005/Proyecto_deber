@@ -1,12 +1,12 @@
-import { Navigate, Outlet } from "react-router"
-import storeAuth from "../context/storeAuth"
-
+import { Navigate, Outlet } from "react-router";
+import storeAuth from "../context/storeAuth";
 
 const PublicRoute = () => {
+  const token = storeAuth((state) => state.token);
+  const justLoggedIn = storeAuth((state) => state.justLoggedIn); // nuevo estado booleano
 
-    const token = storeAuth((state) => state.token)
-    
-    return token ? <Navigate to="/dashboard" /> : <Outlet />
-}
+  // Redirige a dashboard solo si hay token y el usuario acaba de loguearse
+  return token && justLoggedIn ? <Navigate to="/dashboard" /> : <Outlet />;
+};
 
-export default PublicRoute
+export default PublicRoute;

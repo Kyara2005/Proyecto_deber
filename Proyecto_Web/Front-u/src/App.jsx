@@ -18,8 +18,19 @@ import ResetPassword from "./pages/ResetPassword";
 import MUsuario from "./pages/MUsuario/MUsuario";
 import PublicRoute from "./routes/PublicRouter.jsx";
 import PrivateRoute from "./routes/PrivateRouter.jsx";
-
+import Ajustes from "./pages/Ajustes/Ajustes.jsx";
+import ActualizarInfo from "./Actualizacion/ActualizarInfo.jsx";
+import storeProfile from './context/storeProfile'
+import storeAuth from './context/storeAuth'
 function App() {
+   const { profile} = storeProfile()
+  const { token } = storeAuth()
+
+  useEffect(() => {
+    if(token){
+      profile()
+    }
+  }, [token])
   useEffect(() => {
     AOS.init({ once: true });
   }, []);
@@ -43,6 +54,8 @@ function App() {
           <Route path="matches" element={<Matches />} />
           <Route path="MUsuario" element={<MUsuario />} />
           <Route path="UserProfile" element={<MUsuario />} />
+          <Route path="Ajustes" element={<Ajustes />} />
+          <Route path="ActualizarInfo" element={<ActualizarInfo />} />
         </Route>
 
         {/* ⬇️ ESTAS SIGUEN SIENDO PÚBLICAS NORMALMENTE */}

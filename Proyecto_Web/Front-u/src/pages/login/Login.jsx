@@ -1,4 +1,3 @@
-// src/pages/login/Login.jsx
 import { useForm } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
@@ -14,7 +13,6 @@ const Login = () => {
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm();
 
-    // ✅ USO CORRECTO DE ZUSTAND
     const setToken = storeAuth((state) => state.setToken);
     const setRol = storeAuth((state) => state.setRol);
 
@@ -37,9 +35,11 @@ const Login = () => {
             setToken(token);
             setRol(data.rol);
 
-            // (Opcional si necesitas localStorage)
-            localStorage.setItem("nombre", nombre);
-            localStorage.setItem("correo", correoInstitucional);
+            // 🔥 GUARDAR EN LOCALSTORAGE
+            localStorage.setItem("token", token);           // <--- token
+            localStorage.setItem("rol", data.rol);         // <--- rol
+            localStorage.setItem("nombre", nombre);        // <--- nombre
+            localStorage.setItem("correo", correoInstitucional); // <--- email
 
             toast.update(loadingToast, {
                 render: "¡Bienvenido!",
@@ -75,8 +75,6 @@ const Login = () => {
                     </p>
 
                     <form className="login-form" onSubmit={handleSubmit(handleLogin)}>
-
-                        {/* EMAIL */}
                         <div className="input-group">
                             <input
                                 type="email"
@@ -86,7 +84,6 @@ const Login = () => {
                             {errors.email && <span className="error-text">{errors.email.message}</span>}
                         </div>
 
-                        {/* PASSWORD */}
                         <div className="input-group">
                             <input
                                 type="password"
@@ -96,7 +93,6 @@ const Login = () => {
                             {errors.password && <span className="error-text">{errors.password.message}</span>}
                         </div>
 
-                        {/* ROL */}
                         <div className="input-group">
                             <select
                                 {...register("rol", { required: "Selecciona un rol" })}
@@ -107,13 +103,11 @@ const Login = () => {
                                 <option value="estudiante">Estudiante</option>
                                 <option value="moderador">Moderador</option>
                             </select>
-
                             {errors.rol && (
                                 <span className="error-text">{errors.rol.message}</span>
                             )}
                         </div>
 
-                        {/* BOTÓN */}
                         <button type="submit" className="login-btn">Iniciar Sesión</button>
 
                         <Link to="/Forgot-password" className="Forgot-link">

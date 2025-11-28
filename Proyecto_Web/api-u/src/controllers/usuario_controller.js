@@ -1,7 +1,6 @@
 import Usuario from "../models/Usuario.js";
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js";
 
-
 // =========================================================
 // 🔵 REGISTRO
 // =========================================================
@@ -53,7 +52,7 @@ const confirmarMail = async (req, res) => {
 
         return res.redirect(`${process.env.URL_FRONTEND}/confirmar/exito`);
 
-    } catch (error) {
+    } catch {
         return res.redirect(`${process.env.URL_FRONTEND}/confirmar/error`);
     }
 };
@@ -166,7 +165,7 @@ const loginUsuario = async (req, res) => {
 
         res.status(200).json({
             msg: "Inicio de sesión exitoso",
-            token: usuarioBDD.createJWT(),  // ← TOKEN REAL DE LOGIN
+            token: usuarioBDD.createJWT(),
             nombre: usuarioBDD.nombre,
             apellido: usuarioBDD.apellido,
             rol: usuarioBDD.rol
@@ -177,12 +176,46 @@ const loginUsuario = async (req, res) => {
     }
 };
 
+
+// =========================================================
+// 🔵 PERFIL (TOKEN VALIDADO)
+// =========================================================
 const perfil = (req, res) => {
     const { password, token, resetToken, resetTokenExpire, ...usuarioSeguro } = req.usuario;
     res.status(200).json(usuarioSeguro);
 };
 
+// =========================================================
+// 🔵 ACTUALIZAR PERFIL DE USUARIO (SOLO CAMPOS PERMITIDOS)
+// =========================================================
+const actualizarUsuario = async (req, res) => {
+    try {
+        const { nombre, telefono, direccion, cedula, descripcion, universidad, carrera, avatar } = req.body;
 
+        const usuarioBDD = await Usuario.findById(req.usuario._id);
+
+        if (!usuarioBDD) {
+            return res.status(404).json({ msg: "Usuario no encontrado" });
+        }
+
+        // Actualizamos solo los campos permitidos
+        usuarioBDD.nombre = nombre || usuarioBDD.nombre;
+        usuarioBDD.telefono = telefono || usuarioBDD.telefono;
+        usuarioBDD.direccion = direccion || usuarioBDD.direccion;
+        usuarioBDD.cedula = cedula || usuarioBDD.cedula;
+        usuarioBDD.descripcion = descripcion || usuarioBDD.descripcion;
+        usuarioBDD.universidad = universidad || usuarioBDD.universidad;
+        usuarioBDD.carrera = carrera || usuarioBDD.carrera;
+        usuarioBDD.avatar = avatar || usuarioBDD.avatar;
+
+        await usuarioBDD.save();
+
+        res.status(200).json({ msg: "Información actualizada correctamente" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Error al actualizar información" });
+    }
+};
 // =========================================================
 // EXPORTAR
 // =========================================================
@@ -193,5 +226,6 @@ export {
     comprobarTokenPassword,
     crearNuevoPassword,
     loginUsuario,
-    perfil
+    perfil,
+    actualizarUsuario
 };

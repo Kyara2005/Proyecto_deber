@@ -147,7 +147,7 @@ const Dashboard = () => {
                     <button onClick={() => navigate("/Dashboard")}>Inicio</button>
                     <button onClick={() => navigate("/MUsuario")}>Mi cuenta</button>
                     <button onClick={() => { }}>Favoritos</button>
-                    <button onClick={() => { }}>Ajustes</button>
+                    <button onClick={() => navigate("/Ajustes")}>Ajustes</button>
                     <button onClick={handleLogout}>Cerrar sesión</button>
                 </div>
             </nav>
