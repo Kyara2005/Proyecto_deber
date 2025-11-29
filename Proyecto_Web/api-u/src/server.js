@@ -11,7 +11,9 @@ dotenv.config();
 const app = express();
 
 // ✅ Middlewares
-app.use(cors());
+app.use(cors({
+    origin: process.env.URL_FRONTEND // https://proyectovibe-u.netlify.app
+}));
 app.use(express.json({ limit: "10mb" })); // aumento límite por si suben imágenes grandes
 
 // ✅ Configuración de Cloudinary

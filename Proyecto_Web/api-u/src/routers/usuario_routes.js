@@ -34,4 +34,17 @@ router.get("/perfil", verificarTokenJWT, perfil);
 // 🔵 Actualizar información
 router.put("/actualizar", verificarTokenJWT, actualizarUsuario);
 
+/* ---------------------------------------------------
+    🟣 FRASE MOTIVADORA
+---------------------------------------------------- */
+router.get("/frase", async (req, res) => {
+    try {
+        const response = await fetch("https://zenquotes.io/api/random");
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error al obtener la frase:", error);
+        res.status(500).json({ error: "No se pudo obtener la frase motivadora" });
+    }
+});
 export default router;
