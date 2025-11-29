@@ -1,4 +1,4 @@
-// config/nodemailer.js
+/* // config/nodemailer.js
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
@@ -72,3 +72,4 @@ export const sendMailToRecoveryPassword = async (userMail, token) => {
 };
 
 export default sendMail;
+ */

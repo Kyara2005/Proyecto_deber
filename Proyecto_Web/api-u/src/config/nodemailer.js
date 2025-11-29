@@ -46,7 +46,8 @@ const sendMail = async (to, subject, html) => {
 // ======================================================
 // 🔹 Función genérica para envíos de recuperación
 // ======================================================
-const sendMailRP = async (to, subject, html) => {
+
+/* const sendMailRP = async (to, subject, html) => {
   try {
     const info = await transporter.sendMail({
       from: `"Vibe-U 🎓" <${USER_EMAIL}>`,
@@ -60,7 +61,7 @@ const sendMailRP = async (to, subject, html) => {
     console.error("❌ Error enviando email de recuperación:", error);
     throw error;
   }
-};
+}; */
 
 // ======================================================
 // 🟣 CORREO DE CONFIRMACIÓN (Registro)
@@ -95,8 +96,8 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
     <h1>Vibe-U 💜</h1>
     <p>Has solicitado restablecer tu contraseña.</p>
     <a href="${urlRecovery}" style="display:inline-block;background:#7c3aed;color:white;
-       padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:bold;">
-       Restablecer contraseña
+      padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:bold;">
+      Restablecer contraseña
     </a>
     <br><br>
     <p>Si no solicitaste este cambio, ignora este mensaje.</p>
@@ -104,7 +105,7 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
     <footer>El equipo de Vibe-U 💜</footer>
   `;
 
-  return sendMailRP(userMail, "Recupera tu contraseña en Vibe-U 🎓", html);
+  return sendMail(userMail, "Recupera tu contraseña en Vibe-U 🎓", html);
 };
 
 // ======================================================
@@ -112,7 +113,6 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
 // ======================================================
 export {
   sendMail,
-  sendMailRP,
   sendMailToRegister,
   sendMailToRecoveryPassword
 };
