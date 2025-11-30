@@ -247,8 +247,22 @@ const ActualizarInfo = () => {
           <label className="field-label">Carrera</label>
           <input className="field-input" value={userCareer} onChange={e => setUserCareer(e.target.value)} placeholder="Tu carrera" />
         </div>
+        <div className="btn-row">
+  <button 
+    className="cancel-btn" 
+    onClick={() => navigate("/ajustes")}
+  >
+    Cancelar
+  </button>
 
-        <button className="save-btn" onClick={handleUpdate}>Guardar cambios</button>
+  <button 
+    className="save-btn"
+    onClick={handleUpdate}
+  >
+    Guardar cambios
+  </button>
+</div>
+
       </div>
     </div>
   );

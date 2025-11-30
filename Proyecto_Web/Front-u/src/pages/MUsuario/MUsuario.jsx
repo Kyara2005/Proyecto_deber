@@ -30,10 +30,8 @@ const MUsuario = () => {
   const [userUniversity, setUserUniversity] = useState("");
   const [userCareer, setUserCareer] = useState("");
 
-  // 🆕 Función para añadir anti-caché a la URL del avatar
   const getAvatarUrl = (url) => {
     if (!url) return null;
-    // Añade un timestamp como parámetro para forzar la recarga del navegador
     return `${url}?t=${new Date().getTime()}`;
   };
 
@@ -43,7 +41,6 @@ const MUsuario = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        // Se mantiene la ruta /perfil para la carga inicial
         const response = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/perfil`, 
           { headers: { Authorization: `Bearer ${token}` } }
@@ -68,17 +65,13 @@ const MUsuario = () => {
   }, []);
 
   const handleFileClick = () => {
-    // Nota: Aquí solo se dispara el input. El manejo de la imagen para subirla y persistirla
-    // se hace idealmente en el componente "ActualizarInfo" (con el cropper).
     fileInputRef.current.click();
   };
 
-  // Función de subida directa (solo para prueba, ya que el cropper se usa en ActualizarInfo)
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Lógica de subida y guardado de persistencia (si se usa directamente aquí)
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "VIBE-U");
@@ -113,7 +106,6 @@ const MUsuario = () => {
       toast.error("Error al actualizar el avatar.");
     }
   };
-  // ----------------------------------------------------------------------
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -154,7 +146,6 @@ const MUsuario = () => {
       case "cuenta":
         return (
           <div className="user-profile-section">
-            {/* Nombre arriba del avatar en color negro */}
             <h3 style={{ textAlign: "center", marginBottom: "15px", color: "#000" }}>
               {userName || "Usuario"}
             </h3>
@@ -162,7 +153,6 @@ const MUsuario = () => {
             <div className="profile-header" style={{ justifyContent: "center" }}>
               <div className="avatar-circle-large">
                 {avatar ? (
-                  // 🛑 APLICAR getAvatarUrl AQUÍ
                   <img src={getAvatarUrl(avatar)} alt="Avatar" className="avatar-img-large" />
                 ) : (
                   <span className="default-avatar-large">👤</span>
@@ -225,14 +215,15 @@ const MUsuario = () => {
       {/* MENÚ DESLIZABLE */}
       <nav className={`side-menu ${menuOpen ? "show" : ""}`}>
 
-        {/* SECCIÓN SUPERIOR: Menú + Avatar */}
+        {/* SECCIÓN SUPERIOR */}
         <div className="menu-header">
+
+          {/* 🔵 CAMBIO AÑADIDO AQUÍ */}
           <h3 className="menu-title">Menú</h3>
 
           <div className="avatar-section">
             <div className="avatar-container" onClick={handleFileClick}>
               {avatar ? (
-                // 🛑 APLICAR getAvatarUrl AQUÍ
                 <img src={getAvatarUrl(avatar)} alt="Avatar" className="avatar-img" />
               ) : (
                 <span className="default-avatar">👤</span>
@@ -252,7 +243,6 @@ const MUsuario = () => {
           </div>
         </div>
 
-        {/* BOTONES ALINEADOS A LA IZQUIERDA */}
         <div className="menu-buttons">
           <button onClick={() => navigate("/Dashboard")}>Inicio</button>
           <button onClick={() => navigate("/MUsuario")}>Mi cuenta</button>
@@ -262,14 +252,9 @@ const MUsuario = () => {
         </div>
       </nav>
 
-      {/* =============================== */}
-      {/* BARRA DE NAVEGACIÓN PRINCIPAL */}
-      {/* =============================== */}
-
       <div className="main-nav-panel"> 
         <div className="left-panel-content">
 
-          {/* Avatar y texto */}
           <div style={{ textAlign: "center", marginBottom: "20px" }}>
             <div
               style={{
@@ -282,21 +267,18 @@ const MUsuario = () => {
               }}
             >
               {avatar ? (
-                // 🛑 APLICAR getAvatarUrl AQUÍ
                 <img src={getAvatarUrl(avatar)} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Avatar" />
               ) : (
                 <span style={{ fontSize: "50px", display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>👤</span>
               )}
             </div>
 
-            {/* Aquí Damaris y su estado */}
-            <h3 style={{ color: "white", marginTop: "10px" }}>{userName}</h3>
+            <h3 style={{ color: "white", marginTop: "10px"}}>{userName}</h3>
             <p style={{ color: "#8bc34a", marginTop: "-5px" }}>{userStatus}</p>
 
             <hr style={{ marginTop: "10px", marginBottom: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.2)" }} />
           </div>
 
-          {/* Botones */}
           <div className="menu-buttons">
             <button className={activeTab === "cuenta" ? "active" : ""} onClick={() => setActiveTab("cuenta")}>Cuenta</button>
             <button className={activeTab === "favoritos" ? "active" : ""} onClick={() => setActiveTab("favoritos")}>Favoritos</button>

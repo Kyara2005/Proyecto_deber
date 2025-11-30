@@ -19,9 +19,13 @@ const ResetPassword = () => {
   const handleReset = async (data) => {
     const loadingToast = toast.loading("Restableciendo contraseña...");
     try {
+      // ✅ CORRECCIÓN CLAVE: Enviar 'confirmpassword' para que el backend pueda validarlo.
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/reset-password/${token}`,
-        { password: data.password }
+        { 
+          password: data.password, // Enviamos el campo principal
+          confirmpassword: data.confirmPassword // Enviamos la confirmación con el nombre que espera el backend
+        }
       );
       toast.update(loadingToast, { render: res.data.msg, type: "success", isLoading: false, autoClose: 4000 });
       setTimeout(() => navigate("/login"), 2000);

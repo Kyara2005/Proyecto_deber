@@ -156,6 +156,7 @@
 /* ---------------------------------------------------- */
 /* MENÚ LATERAL DESLIZABLE (side-menu) con DEGRADADO    */
 /* ---------------------------------------------------- */
+
 .side-menu {
     position: fixed;
     top: 0;
@@ -392,4 +393,9 @@
         max-width: 100%;
         margin: 0 auto;
     }
+}
+
+/* 🔥 NEGRITA SOLO PARA "Menú" DEL MENÚ HAMBURGUESA */
+.side-menu .menu-title {
+    font-weight: 800 !important;
 }

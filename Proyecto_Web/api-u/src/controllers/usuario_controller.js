@@ -113,6 +113,7 @@ const comprobarTokenPassword = async (req, res) => {
 // =========================================================
 const crearNuevoPassword = async (req, res) => {
     try {
+        // La propiedad 'confirmpassword' debe ser enviada desde el frontend.
         const { password, confirmpassword } = req.body;
         const { token } = req.params;
 
@@ -143,29 +144,47 @@ const crearNuevoPassword = async (req, res) => {
 
 
 // =========================================================
-// 🔵 LOGIN
+// 🔵 LOGIN (CON VALIDACIÓN DE ROL)
 // =========================================================
 const loginUsuario = async (req, res) => {
     try {
-        const { correoInstitucional, password } = req.body;
+        const { correoInstitucional, password, rol } = req.body;
 
+        // Validar campos
+        if (!correoInstitucional || !password || !rol) {
+            return res.status(400).json({ msg: "Todos los campos son obligatorios" });
+        }
+
+        // Buscar al usuario
         const usuarioBDD = await Usuario.findOne({ correoInstitucional });
         if (!usuarioBDD) {
             return res.status(404).json({ msg: "Usuario no registrado" });
         }
 
+        // Validar confirmación de correo
         if (!usuarioBDD.confirmEmail) {
             return res.status(400).json({ msg: "Debes confirmar tu correo primero" });
         }
 
+        // Validar contraseña
         const passwordOK = await usuarioBDD.matchPassword(password);
         if (!passwordOK) {
             return res.status(400).json({ msg: "Contraseña incorrecta" });
         }
 
+        // 👀 VALIDACIÓN CLAVE: ROL SELECCIONADO VS ROL REAL GUARDADO
+        if (usuarioBDD.rol !== rol) {
+            return res.status(403).json({
+                msg: `No tienes permiso para ingresar como ${rol}.`
+            });
+        }
+
+        // Generar token
+        const token = usuarioBDD.createJWT();
+
         res.status(200).json({
             msg: "Inicio de sesión exitoso",
-            token: usuarioBDD.createJWT(),
+            token,
             nombre: usuarioBDD.nombre,
             apellido: usuarioBDD.apellido,
             rol: usuarioBDD.rol
@@ -217,6 +236,37 @@ const actualizarUsuario = async (req, res) => {
     }
 };
 // =========================================================
+// 🔵 ACTUALIZAR CONTRASEÑA
+// =========================================================
+const actualizarPassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ msg: "Debes llenar todos los campos" });
+        }
+
+        // Buscar usuario por id
+        const usuarioBDD = await Usuario.findById(req.usuario._id);
+        if (!usuarioBDD) return res.status(404).json({ msg: "Usuario no encontrado" });
+
+        // Verificar contraseña actual
+        const isMatch = await usuarioBDD.matchPassword(oldPassword);
+        if (!isMatch) return res.status(400).json({ msg: "Contraseña actual incorrecta" });
+
+        // Encriptar y actualizar nueva contraseña
+        usuarioBDD.password = await usuarioBDD.encryptPassword(newPassword);
+        await usuarioBDD.save();
+
+        res.status(200).json({ msg: "Contraseña actualizada correctamente" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Error al actualizar la contraseña" });
+    }
+};
+
+// =========================================================
 // EXPORTAR
 // =========================================================
 export {
@@ -227,5 +277,6 @@ export {
     crearNuevoPassword,
     loginUsuario,
     perfil,
-    actualizarUsuario
+    actualizarUsuario,
+    actualizarPassword
 };

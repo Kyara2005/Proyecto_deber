@@ -7,7 +7,8 @@ import {
     crearNuevoPassword,
     loginUsuario,
     perfil,
-    actualizarUsuario
+    actualizarUsuario,
+    actualizarPassword
 } from "../controllers/usuario_controller.js";
 
 import { verificarTokenJWT } from "../middlewares/JWT.js";
@@ -33,6 +34,10 @@ router.get("/perfil", verificarTokenJWT, perfil);
 
 // 🔵 Actualizar información
 router.put("/actualizar", verificarTokenJWT, actualizarUsuario);
+// 🔵 Actualizar contraseña
+// 🔵 Actualizar contraseña
+router.put("/actualizar/password", verificarTokenJWT, actualizarPassword);
+// =========================================================
 
 /* ---------------------------------------------------
     🟣 FRASE MOTIVADORA

@@ -4,9 +4,9 @@
   max-width: 800px;
   margin: 50px auto;
   padding: 20px;
-  background-color: white; /* fondo blanco */
-  color: black; /* letras negras */
-  border-radius: 20px; /* bordes circulares */
+  background-color: white;
+  color: black;
+  border-radius: 20px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
@@ -14,7 +14,7 @@
 .titulo {
   text-align: center;
   font-size: 2rem;
-  color: black; /* letras negras */
+  color: black;
   margin-bottom: 30px;
 }
 
@@ -29,7 +29,7 @@
 .avatar-circle {
   width: 120px;
   height: 120px;
-  border-radius: 50%; /* borde completamente circular */
+  border-radius: 50%;
   background-color: #ffffff;
   display: flex;
   align-items: center;
@@ -37,7 +37,7 @@
   overflow: hidden;
   cursor: pointer;
   transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  border: 2px solid black; /* borde negro */
+  border: 2px solid black;
   margin-bottom: 10px;
 }
 
@@ -51,7 +51,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%; /* mantener la imagen circular */
+  border-radius: 50%;
 }
 
 .default-avatar {
@@ -59,7 +59,7 @@
   color: black;
 }
 
-/* Botones de avatar */
+/* Botones avatar */
 .btns-avatar {
   display: flex;
   gap: 10px;
@@ -70,7 +70,7 @@
   color: white;
   border: none;
   padding: 8px 15px;
-  border-radius: 15px; /* bordes redondeados */
+  border-radius: 15px;
   cursor: pointer;
   transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -81,7 +81,7 @@
   transform: translateY(-2px);
 }
 
-/* Opciones de avatar */
+/* Modal avatars */
 .avatar-modal {
   display: flex;
   justify-content: center;
@@ -93,7 +93,7 @@
 .avatar-option {
   width: 80px;
   height: 80px;
-  border-radius: 50%; /* circular */
+  border-radius: 50%;
   cursor: pointer;
   border: 2px solid black;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -104,7 +104,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Inputs y etiquetas */
+/* Inputs */
 .form-section {
   display: flex;
   flex-direction: column;
@@ -124,7 +124,7 @@
 
 .field-input {
   padding: 8px 12px;
-  border-radius: 12px; /* bordes circulares */
+  border-radius: 12px;
   border: 1px solid black;
   background-color: white;
   font-size: 1rem;
@@ -140,30 +140,51 @@
   outline: none;
 }
 
-/* Textarea */
 .textarea-input {
   resize: vertical;
   min-height: 60px;
-  color: black;
-  border-radius: 12px;
 }
 
-/* Botón guardar */
+/* Botones Guardar / Cancelar */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+/* Cancelar */
+.cancel-btn {
+  flex: 1;
+  background-color: #bbb;
+  color: #000;
+  padding: 12px 18px;
+  border-radius: 15px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #999;
+}
+
+/* Guardar */
 .save-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
+  flex: 1;
   background-color: black;
   color: white;
-  font-size: 1rem;
+  padding: 12px 18px;
   border: none;
-  border-radius: 15px; /* bordes redondeados */
+  border-radius: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: 0.2s;
 }
 
 .save-btn:hover {
   background-color: #333;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transform: translateY(-2px);
 }
 

@@ -22,6 +22,7 @@ import Ajustes from "./pages/Ajustes/Ajustes.jsx";
 import ActualizarInfo from "./Actualizacion/ActualizarInfo.jsx";
 import storeProfile from './context/storeProfile'
 import storeAuth from './context/storeAuth'
+import ChangePasswordForm from "./pages/Password/ActualizarPass.jsx";
 function App() {
    const { profile} = storeProfile()
   const { token } = storeAuth()
@@ -56,6 +57,7 @@ function App() {
           <Route path="UserProfile" element={<MUsuario />} />
           <Route path="Ajustes" element={<Ajustes />} />
           <Route path="ActualizarInfo" element={<ActualizarInfo />} />
+          <Route path="ActualizarPass" element={<ChangePasswordForm />} />
         </Route>
 
         {/* ⬇️ ESTAS SIGUEN SIENDO PÚBLICAS NORMALMENTE */}

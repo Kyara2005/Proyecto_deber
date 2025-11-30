@@ -25,21 +25,22 @@ const Login = () => {
                 {
                     correoInstitucional: data.email,
                     password: data.password,
-                    rol: data.rol
+                    rol: data.rol   // 🔥 AHORA SÍ ENVIAMOS EL ROL
                 }
             );
 
-            const { token, nombre, correoInstitucional } = res.data;
+            // El backend devuelve el rol verificado
+            const { token, nombre, correoInstitucional, rol } = res.data;
 
-            // 🔥 GUARDAR EN ZUSTAND
+            // Guardar en Zustand
             setToken(token);
-            setRol(data.rol);
+            setRol(rol);
 
-            // 🔥 GUARDAR EN LOCALSTORAGE
-            localStorage.setItem("token", token);           // <--- token
-            localStorage.setItem("rol", data.rol);         // <--- rol
-            localStorage.setItem("nombre", nombre);        // <--- nombre
-            localStorage.setItem("correo", correoInstitucional); // <--- email
+            // Guardar en localStorage
+            localStorage.setItem("token", token);
+            localStorage.setItem("rol", rol);
+            localStorage.setItem("nombre", nombre);
+            localStorage.setItem("correo", correoInstitucional);
 
             toast.update(loadingToast, {
                 render: "¡Bienvenido!",
@@ -75,11 +76,14 @@ const Login = () => {
                     </p>
 
                     <form className="login-form" onSubmit={handleSubmit(handleLogin)}>
+                        
                         <div className="input-group">
                             <input
                                 type="email"
                                 placeholder="Email universitario"
-                                {...register("email", { required: "El email es obligatorio" })}
+                                {...register("email", {
+                                    required: "El email es obligatorio"
+                                })}
                             />
                             {errors.email && <span className="error-text">{errors.email.message}</span>}
                         </div>
@@ -88,11 +92,14 @@ const Login = () => {
                             <input
                                 type="password"
                                 placeholder="Contraseña"
-                                {...register("password", { required: "La contraseña es obligatoria" })}
+                                {...register("password", {
+                                    required: "La contraseña es obligatoria"
+                                })}
                             />
                             {errors.password && <span className="error-text">{errors.password.message}</span>}
                         </div>
 
+                        {/* 🔥 El usuario debe seleccionar el rol */}
                         <div className="input-group">
                             <select
                                 {...register("rol", { required: "Selecciona un rol" })}
@@ -108,7 +115,9 @@ const Login = () => {
                             )}
                         </div>
 
-                        <button type="submit" className="login-btn">Iniciar Sesión</button>
+                        <button type="submit" className="login-btn">
+                            Iniciar Sesión
+                        </button>
 
                         <Link to="/Forgot-password" className="Forgot-link">
                             ¿Olvidaste tu contraseña?

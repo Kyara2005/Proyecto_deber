@@ -1,6 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "axios"; // Necesitas axios
+import storeAuth from "../../context/storeAuth"; // Necesitas storeAuth
 import "./Ajustes.css";
 
 const Ajustes = () => {
@@ -9,50 +11,51 @@ const Ajustes = () => {
   const [idioma, setIdioma] = useState("es");
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [avatar, setAvatar] = useState(null);
+  const [avatar, setAvatar] = useState(null); // Importante: Estado para guardar la URL del avatar
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // 🔵 CARGAR AVATAR DESDE EL BACKEND -->
+  // 📌 Cargar Avatar al iniciar el componente
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchAvatar = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        const token = storeAuth.getState().token;
+        
+        // Verifica que la variable de entorno y el token existan
+        if (!token || !import.meta.env.VITE_BACKEND_URL) return;
 
         const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL.replace("/api/usuarios", "")}/api/usuarios/perfil`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `${import.meta.env.VITE_BACKEND_URL}/perfil`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Si el usuario tiene avatar guardado →
+        // ✔ Cargar avatar desde backend
         if (res.data?.avatar) {
           setAvatar(res.data.avatar);
         }
       } catch (error) {
-        console.log("Error cargando avatar:", error);
+        console.error("Error al obtener el avatar en Ajustes:", error);
       }
     };
 
-    fetchUser();
-  }, []);
+    fetchAvatar();
+  }, []); // El array vacío asegura que se ejecute solo una vez al inicio
 
-  // 🔵 Subir avatar desde el input
   const handleFileClick = () => fileInputRef.current.click();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAvatar(URL.createObjectURL(file)); // Muestra preview
+      setAvatar(URL.createObjectURL(file));
+      // NOTA: Aquí solo se establece la vista previa. Para guardar
+      // permanentemente, necesitarías una llamada a la API de subida.
     }
   };
 
-  // 🔴 Cerrar sesión
   const handleLogout = () => {
     localStorage.removeItem("token");
+    // Opcional: storeAuth.getState().clearToken();
     navigate("/login");
   };
 
@@ -76,27 +79,18 @@ const Ajustes = () => {
         <div className="menu-header">
           <h3 className="menu-title">Menú</h3>
 
+          {/* AVATAR — YA NO ES CLICKEABLE */}
           <div className="avatar-section">
-            <div className="avatar-container" onClick={handleFileClick}>
+            <div className="avatar-container" style={{ cursor: "default" }}>
               {avatar ? (
+                // Aquí se muestra el avatar cargado por el useEffect o el nuevo archivo
                 <img src={avatar} alt="Avatar" className="avatar-img" />
               ) : (
                 <span className="default-avatar">👤</span>
               )}
-
-              <div className="avatar-overlay">
-                <i className="fa fa-camera"></i>
-              </div>
             </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="input-file-hidden"
-              onChange={handleFileChange}
-            />
           </div>
+
         </div>
 
         {/* Botones del menú */}
@@ -116,15 +110,21 @@ const Ajustes = () => {
       <div className="ajustes-card">
         <h3>Cuenta</h3>
 
+        {/* --- ACTUALIZAR INFO DE CUENTA --- */}
         <div
           className="ajustes-row hover-card"
           onClick={() => navigate("/ActualizarInfo")}
           style={{ cursor: "pointer" }}
         >
-          <span>Actualizar información de cuenta</span>
+          <span>  Actualizar información de cuenta</span>
         </div>
 
-        <div className="ajustes-row hover-highlight">
+        {/* --- CAMBIAR CONTRASEÑA --- */}
+        <div
+          className="ajustes-row hover-highlight"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/ActualizarPass")}
+        >
           <span>Cambiar contraseña</span>
         </div>
       </div>
@@ -174,7 +174,11 @@ const Ajustes = () => {
       <div className="ajustes-card">
         <h3>Sesión</h3>
 
-        <div className="ajustes-row hover-highlight" onClick={handleLogout}>
+        <div
+          className="ajustes-row hover-card"
+          onClick={() => navigate("/login")}
+          style={{ cursor: "pointer" }}
+        >
           <span>Cerrar sesión</span>
         </div>
       </div>
