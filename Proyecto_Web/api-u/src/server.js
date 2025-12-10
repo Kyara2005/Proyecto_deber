@@ -70,6 +70,17 @@ app.use((req, res) => {
 });
 
 // ================================
+// ✅ Manejo de errores CORS (opcional para debug)
+// ================================
+app.use((err, req, res, next) => {
+  if (err.message.startsWith("CORS bloqueado")) {
+    console.warn(err.message); // Log en consola
+    return res.status(403).json({ msg: err.message }); // Mensaje claro al frontend
+  }
+  next(err);
+});
+
+// ================================
 // ✅ Servidor
 // ================================
 const PORT = process.env.PORT || 3000;
