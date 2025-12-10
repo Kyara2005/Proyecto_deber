@@ -10,32 +10,71 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Middlewares
-app.use(cors({
-    origin: process.env.URL_FRONTEND // https://proyectovibe.netlify.app
-}));
-app.use(express.json({ limit: "10mb" })); // aumento límite por si suben imágenes grandes
+// ================================
+// ✅ CORS: Local + Producción
+// ================================
+const allowedOrigins = [
+  "http://localhost:3000",               // frontend local
+  process.env.URL_FRONTEND                // frontend producción
+];
 
-// ✅ Configuración de Cloudinary
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // Postman o scripts sin origin
+    if(allowedOrigins.indexOf(origin) === -1){
+      return callback(new Error("CORS no permitido"), false);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"],
+  credentials: true
+}));
+
+// ================================
+// Middleware
+// ================================
+app.use(express.json({ limit: "10mb" })); // límite aumentado por imágenes grandes
+
+// ================================
+// Configuración de Cloudinary
+// ================================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-// Variables globales
-app.set("port", process.env.PORT || 3000);
-
+// ================================
 // Rutas
+// ================================
 app.get("/", (req, res) => res.send("Server on"));
 app.use("/api/usuarios", usuarioRouter);
 
-// Manejo de rutas no encontradas
-app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
+// ================================
+// Preflight OPTIONS
+// ================================
+app.options("*", cors());
 
-// Iniciar servidor
-app.listen(app.get("port"), "0.0.0.0", () => {
-    console.log(`✅ Servidor corriendo en http://localhost:${app.get("port")}`);
+// ================================
+// Conexión a MongoDB
+// ================================
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB conectado"))
+.catch((err) => {
+  console.error("Error MongoDB:", err.message);
+  process.exit(1);
+});
+
+// ================================
+// Puerto
+// ================================
+const PORT = process.env.PORT || 8000; // Koyeb asigna process.env.PORT
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });
 
 export default app;
