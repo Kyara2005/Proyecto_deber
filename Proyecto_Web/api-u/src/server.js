@@ -1,4 +1,3 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -10,32 +9,72 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Middlewares
-app.use(cors({
-    origin: process.env.URL_FRONTEND // https://proyectovibe.netlify.app
-}));
-app.use(express.json({ limit: "10mb" })); // aumento límite por si suben imágenes grandes
+// ================================
+// ✅ CORS (LOCAL + PRODUCCIÓN)
+// ================================
+const allowedOrigins = [
+  // 🔥 producción
+  "https://vibe-y91z.onrender.com",
+  "https://vibe-eight-delta.vercel.app",
+  process.env.URL_FRONTEND,
 
-// ✅ Configuración de Cloudinary
+  // 🔥 local
+  "http://localhost:5173",
+  "http://127.0.0.1:5173"
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // Postman / server-to-server
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS bloqueado: " + origin));
+  },
+  credentials: true
+}));
+
+// ✅ IMPORTANTE: preflight OPTIONS
+app.options("*", cors());
+
+// ================================
+// ✅ Middlewares
+// ================================
+app.use(express.json({ limit: "10mb" }));
+
+// ================================
+// ✅ Cloudinary
+// ================================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-// Variables globales
-app.set("port", process.env.PORT || 3000);
+// ================================
+// ✅ MongoDB
+// ================================
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB conectado"))
+  .catch(err => console.error("❌ Error en MongoDB:", err));
 
-// Rutas
-app.get("/", (req, res) => res.send("Server on"));
+// ================================
+// ✅ Rutas
+// ================================
+app.get("/", (req, res) => res.send("🚀 Backend funcionando"));
 app.use("/api/usuarios", usuarioRouter);
 
-// Manejo de rutas no encontradas
-app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
+// ================================
+// ✅ 404
+// ================================
+app.use((req, res) => {
+  res.status(404).json({ msg: "404 | Endpoint no encontrado" });
+});
 
-// Iniciar servidor
-app.listen(app.get("port"), "0.0.0.0", () => {
-    console.log(`✅ Servidor corriendo en http://localhost:${app.get("port")}`);
+// ================================
+// ✅ Servidor
+// ================================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🔥 Servidor corriendo en http://localhost:${PORT}`);
 });
 
 export default app;
