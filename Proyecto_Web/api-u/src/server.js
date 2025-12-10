@@ -24,7 +24,7 @@ cloudinary.config({
 });
 
 // Variables globales
-app.set("port", process.env.PORT || 8000);
+app.set("port", process.env.PORT || 3000);
 
 // Rutas
 app.get("/", (req, res) => res.send("Server on"));
