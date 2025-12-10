@@ -32,9 +32,22 @@ app.use(cors({
 }));
 
 // ================================
-// Middleware
+// Middleware JSON
 // ================================
-app.use(express.json({ limit: "10mb" })); // límite aumentado por imágenes grandes
+app.use(express.json({ limit: "10mb" })); // aumento límite por imágenes grandes
+
+// ================================
+// Manejo de preflight OPTIONS
+// ================================
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // ================================
 // Configuración de Cloudinary
@@ -51,10 +64,8 @@ cloudinary.config({
 app.get("/", (req, res) => res.send("Server on"));
 app.use("/api/usuarios", usuarioRouter);
 
-// ================================
-// Preflight OPTIONS
-// ================================
-app.options("*", cors());
+// Manejo de rutas no encontradas
+app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
 
 // ================================
 // Conexión a MongoDB
@@ -72,7 +83,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // ================================
 // Puerto
 // ================================
-const PORT = process.env.PORT || 8000; // Koyeb asigna process.env.PORT
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
 });
